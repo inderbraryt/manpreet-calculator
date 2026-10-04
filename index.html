@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>PhysioCare - Physiotherapy Visit Tracker</title>
+  <meta name="description" content="Track physiotherapy patient visits, calculate per-visit costs, manage clinical notes, and compute final amounts automatically.">
+  
+  <!-- Google Fonts: Plus Jakarta Sans for UI and Kalam / Caveat for hand-drawn accents -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Kalam:wght@400;700&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- App Wrapper / Phone Mockup Frame -->
+  <div class="phone-viewport">
+    <div class="phone-frame">
+      
+      <!-- Top Dynamic Island / Speaker Notch -->
+      <div class="notch-container">
+        <div class="dynamic-island"></div>
+      </div>
+
+      <!-- iOS Style Status Bar -->
+      <div class="status-bar">
+        <span class="status-time" id="clock-display">10:24</span>
+        <div class="status-icons">
+          <i class="fa-solid fa-signal"></i>
+          <i class="fa-solid fa-wifi"></i>
+          <div class="battery-icon">
+            <span class="battery-level"></span>
+            <span class="battery-text">85</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Scrollable Screen Content -->
+      <div class="screen-content" id="screen-container">
+        
+        <!-- Header Section -->
+        <header class="app-header">
+          <div class="header-left">
+            <div class="logo-icon-box">
+              <!-- Custom Physio therapy SVG Icon -->
+              <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" class="physio-svg">
+                <!-- Physio bench and treatment icon -->
+                <path d="M12 44H52M16 44V54M48 44V54" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+                <!-- Patient on bench -->
+                <circle cx="20" cy="34" r="5" stroke="currentColor" stroke-width="2.5"/>
+                <path d="M26 36H46C48 36 49 38 49 40H23" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+                <!-- Therapist standing & treating -->
+                <circle cx="16" cy="18" r="4.5" stroke="currentColor" stroke-width="2.5"/>
+                <path d="M16 23V35L26 31" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M24 23L34 29" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="brand-text">
+              <h1 class="brand-title">Physio<span>Care</span></h1>
+              <p class="brand-tagline">Move Better <span class="dot">•</span> Feel Better <span class="dot">•</span> Live Better</p>
+            </div>
+          </div>
+          <div class="header-right">
+            <div class="tracker-badge-title">
+              <span>Physiotherapy</span>
+              <span>Visit Tracker</span>
+              <div class="sketch-underline"></div>
+            </div>
+          </div>
+        </header>
+
+        <!-- TAB 1: TRACKER & NOTES (Primary View from Design) -->
+        <main class="tab-view active" id="tab-tracker">
+          
+          <!-- Add Entry Form Card -->
+          <section class="card add-entry-card">
+            <div class="card-header-styled">
+              <i class="fa-regular fa-user header-icon"></i>
+              <h2 class="handwritten-title">Add Entry</h2>
+              <span class="title-underline"></span>
+            </div>
+
+            <form id="entry-form" onsubmit="handleAddEntry(event)">
+              <div class="form-row">
+                <!-- Patient Name Input with Autocomplete / Dropdown -->
+                <div class="form-group flex-1">
+                  <label for="patient-name-input">Patient Name</label>
+                  <div class="input-with-icon">
+                    <i class="fa-regular fa-user input-icon"></i>
+                    <input 
+                      type="text" 
+                      id="patient-name-input" 
+                      placeholder="e.g. Sukhpal Kaur" 
+                      value="Sukhpal Kaur" 
+                      required 
+                      autocomplete="off"
+                    >
+                    <button type="button" class="btn-quick-select" id="btn-patient-dropdown" title="Select Patient" onclick="togglePatientDropdown()">
+                      <i class="fa-solid fa-chevron-down"></i>
+                    </button>
+                  </div>
+                  <!-- Quick Patient Dropdown Menu -->
+                  <div class="patient-dropdown" id="patient-dropdown-menu"></div>
+                </div>
+
+                <!-- Per Visit Cost Input -->
+                <div class="form-group flex-sm">
+                  <label for="visit-cost-input">Per Visit Cost (₹)</label>
+                  <div class="input-with-icon">
+                    <span class="currency-symbol">₹</span>
+                    <input 
+                      type="number" 
+                      id="visit-cost-input" 
+                      placeholder="300" 
+                      value="300" 
+                      min="0" 
+                      step="10"
+                      required
+                    >
+                  </div>
+                </div>
+              </div>
+
+              <!-- Date Picker Row (Collapsible or auto-set) -->
+              <div class="form-row date-notes-row">
+                <div class="form-group flex-1">
+                  <label for="visit-date-input">Visit Date</label>
+                  <div class="input-with-icon">
+                    <i class="fa-regular fa-calendar-days input-icon"></i>
+                    <input type="date" id="visit-date-input">
+                  </div>
+                </div>
+                <div class="form-group flex-1">
+                  <label for="visit-session-type">Session / Treatment Note</label>
+                  <div class="input-with-icon">
+                    <i class="fa-solid fa-stethoscope input-icon"></i>
+                    <input type="text" id="visit-session-type" placeholder="e.g. Manual & Exercise Therapy">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Submit Button -->
+              <button type="submit" class="btn-primary-gradient" id="btn-add-entry">
+                <i class="fa-solid fa-plus"></i> Add Entry
+              </button>
+            </form>
+          </section>
+
+          <!-- Spiral Notebook Patient Details Card -->
+          <section class="spiral-notebook-container">
+            <!-- Ring Binder Punch Holes / Spiral Wire Graphic -->
+            <div class="spiral-rings" aria-hidden="true">
+              <div class="spiral-ring"><div class="hole"></div><div class="wire"></div></div>
+              <div class="spiral-ring"><div class="hole"></div><div class="wire"></div></div>
+              <div class="spiral-ring"><div class="hole"></div><div class="wire"></div></div>
+              <div class="spiral-ring"><div class="hole"></div><div class="wire"></div></div>
+              <div class="spiral-ring"><div class="hole"></div><div class="wire"></div></div>
+              <div class="spiral-ring"><div class="hole"></div><div class="wire"></div></div>
+              <div class="spiral-ring"><div class="hole"></div><div class="wire"></div></div>
+              <div class="spiral-ring"><div class="hole"></div><div class="wire"></div></div>
+              <div class="spiral-ring"><div class="hole"></div><div class="wire"></div></div>
+              <div class="spiral-ring"><div class="hole"></div><div class="wire"></div></div>
+              <div class="spiral-ring"><div class="hole"></div><div class="wire"></div></div>
+              <div class="spiral-ring"><div class="hole"></div><div class="wire"></div></div>
+              <div class="spiral-ring"><div class="hole"></div><div class="wire"></div></div>
+              <div class="spiral-ring"><div class="hole"></div><div class="wire"></div></div>
+            </div>
+
+            <!-- Notepad Inner Content -->
+            <div class="notebook-sheet">
+              
+              <!-- Patient Sheet Header -->
+              <div class="sheet-header">
+                <div class="sheet-title-box">
+                  <div class="sheet-icon-wrap">
+                    <i class="fa-solid fa-clipboard-list"></i>
+                  </div>
+                  <div>
+                    <h2 class="handwritten-title sheet-title">Patient Details</h2>
+                    <span class="title-underline-mint"></span>
+                  </div>
+                </div>
+
+                <div class="mint-pill-badge" id="pill-visits-count">
+                  Visits: <span id="badge-visit-count">5</span>
+                </div>
+              </div>
+
+              <!-- Patient Meta Info -->
+              <div class="patient-meta-grid">
+                <div class="meta-line">
+                  <span class="meta-label">Name</span>
+                  <span class="meta-colon">:</span>
+                  <span class="meta-val patient-display-name" id="display-patient-name">Sukhpal Kaur</span>
+                </div>
+                <div class="meta-line">
+                  <span class="meta-label">Per Visit Cost</span>
+                  <span class="meta-colon">:</span>
+                  <span class="meta-val font-semibold" id="display-visit-cost">₹300</span>
+                </div>
+              </div>
+
+              <!-- Visits Data Table -->
+              <div class="visits-table-wrap">
+                <table class="visits-table" id="visits-table">
+                  <thead>
+                    <tr>
+                      <th class="th-date">Date</th>
+                      <th class="th-visit">Visit No.</th>
+                      <th class="th-amount">Amount (₹)</th>
+                      <th class="th-status"></th>
+                    </tr>
+                  </thead>
+                  <tbody id="visits-tbody">
+                    <!-- Dynamic visits list populated here -->
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Patient Clinical Notes Section -->
+              <div class="notes-section">
+                <div class="notes-header">
+                  <div class="notes-title-wrap">
+                    <i class="fa-solid fa-pencil"></i>
+                    <span class="notes-heading">Notes</span>
+                  </div>
+                  <button class="btn-edit-note" id="btn-edit-note" title="Edit Note" onclick="toggleEditNotes()">
+                    <i class="fa-regular fa-pen-to-square"></i>
+                  </button>
+                </div>
+
+                <div class="notes-content-box" id="notes-content-box">
+                  <p id="display-patient-notes" class="handwritten-notes">
+                    Initial Assessment + Manual Therapy + Exercise Therapy + Follow Up Session
+                  </p>
+                  <textarea id="edit-patient-notes" class="notes-textarea hidden" rows="3"></textarea>
+                  <div class="notes-action-bar hidden" id="notes-action-bar">
+                    <button type="button" class="btn-cancel-note" onclick="cancelEditNotes()">Cancel</button>
+                    <button type="button" class="btn-save-note" onclick="savePatientNotes()">Save Notes</button>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </section>
+
+          <!-- Total Amount Card -->
+          <section class="card total-amount-card">
+            <div class="total-left">
+              <div class="calc-icon-box">
+                <i class="fa-solid fa-calculator"></i>
+              </div>
+              <div class="total-text-wrap">
+                <h3 class="handwritten-total">Total Amount</h3>
+                <span class="calc-underline"></span>
+              </div>
+            </div>
+
+            <div class="total-right">
+              <div class="mint-brush-highlight">
+                <span class="total-currency">₹</span><span class="total-number" id="grand-total-display">1,500</span>
+              </div>
+              <div class="total-formula-sub" id="total-formula-display">
+                (5 Visits × ₹300)
+              </div>
+            </div>
+          </section>
+
+          <!-- Action Buttons (Print / Share / Reset) -->
+          <div class="quick-action-strip">
+            <button class="action-chip" onclick="exportPatientReceipt()">
+              <i class="fa-solid fa-file-invoice"></i> Share / Bill
+            </button>
+            <button class="action-chip" onclick="promptAddNewPatient()">
+              <i class="fa-solid fa-user-plus"></i> New Patient
+            </button>
+            <button class="action-chip text-danger" onclick="clearPatientVisits()">
+              <i class="fa-solid fa-trash-can"></i> Clear Visits
+            </button>
+          </div>
+
+        </main>
+
+        <!-- TAB 2: ALL PATIENTS DIRECTORY (Home Tab) -->
+        <section class="tab-view" id="tab-home">
+          <div class="tab-container">
+            <div class="tab-title-row">
+              <h2 class="tab-heading">Patient Directory</h2>
+              <button class="btn-sm-primary" onclick="promptAddNewPatient()">
+                <i class="fa-solid fa-plus"></i> Add Patient
+              </button>
+            </div>
+            
+            <div class="patient-search-bar">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="patient-search-input" placeholder="Search patient name..." oninput="filterPatientCards()">
+            </div>
+
+            <div class="patient-directory-list" id="patients-directory-list">
+              <!-- Dynamically populated cards of patients -->
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 3: SETTINGS & BACKUP -->
+        <section class="tab-view" id="tab-settings">
+          <div class="tab-container">
+            <h2 class="tab-heading">Clinic Settings</h2>
+            
+            <div class="settings-group">
+              <label class="settings-label">Clinic / Therapist Name</label>
+              <input type="text" id="setting-clinic-name" class="settings-input" value="PhysioCare Clinic">
+            </div>
+
+            <div class="settings-group">
+              <label class="settings-label">Default Per Visit Fee (₹)</label>
+              <input type="number" id="setting-default-fee" class="settings-input" value="300">
+            </div>
+
+            <div class="settings-group">
+              <label class="settings-label">Currency Symbol</label>
+              <input type="text" id="setting-currency" class="settings-input" value="₹">
+            </div>
+
+            <div class="settings-card-actions">
+              <button class="btn-primary-gradient" onclick="saveClinicSettings()">Save Settings</button>
+              <button class="btn-secondary-outline" onclick="loadSampleData()">Reset Sample Data</button>
+              <button class="btn-danger-outline" onclick="wipeAllData()">Erase All Data</button>
+            </div>
+
+            <div class="about-footer">
+              <p>PhysioCare Visit Tracker v2.0</p>
+              <p>Tailored for Physiotherapists & Medical Professionals</p>
+            </div>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- Bottom Navigation Bar -->
+      <nav class="bottom-nav">
+        <button class="nav-item" id="nav-btn-home" onclick="switchTab('home')">
+          <i class="fa-solid fa-house"></i>
+          <span>Home</span>
+        </button>
+        <button class="nav-item active" id="nav-btn-notes" onclick="switchTab('tracker')">
+          <i class="fa-solid fa-clipboard-list"></i>
+          <span>Notes</span>
+          <div class="active-glow-bar"></div>
+        </button>
+        <button class="nav-item" id="nav-btn-settings" onclick="switchTab('settings')">
+          <i class="fa-solid fa-gear"></i>
+          <span>Settings</span>
+        </button>
+      </nav>
+
+      <!-- Home Indicator bar at the bottom of modern phones -->
+      <div class="home-indicator"></div>
+
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Printable / Share Receipt Modal -->
+  <div class="modal-overlay hidden" id="receipt-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-receipt"></i> Patient Summary Receipt</h3>
+        <button class="btn-close-modal" onclick="closeReceiptModal()">&times;</button>
+      </div>
+      <div class="receipt-body" id="receipt-print-area">
+        <!-- Dynamic invoice content -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary-outline" onclick="closeReceiptModal()">Close</button>
+        <button class="btn-share-wa" onclick="shareToWhatsApp()"><i class="fa-brands fa-whatsapp"></i> WhatsApp</button>
+        <button class="btn-primary-gradient" onclick="window.print()"><i class="fa-solid fa-print"></i> Print</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
